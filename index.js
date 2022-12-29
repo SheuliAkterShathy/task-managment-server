@@ -49,7 +49,49 @@ async function run() {
         res.send(tasks);
     });
 
+    app.get('/updated-task/:id', async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: ObjectId(id) };
+        const updatedTask = await tasksCollection.findOne(query);
+        res.send(updatedTask);
+    })
+// put
 
+app.patch("/update/:id", async (req, res) => {
+    const id = req.params.id;
+    const filter = { _id: ObjectId(id) };
+    const update = req.body;
+    const option = { upsert: true };
+    const updateTask = {
+      $set: {
+        task: update.task,
+      },
+    };
+    const result = await tasksCollection.updateOne(
+      filter,
+      updateTask,
+      option
+    );
+    res.send(result);
+  });
+
+  app.put('/complete/:id', async (req, res) => {
+    const id = req.params.id;
+    const filter = { _id: ObjectId(id) }
+    const task = await tasksCollection.findOne(filter);
+    const complete = task.isCompleted;
+    if(complete){
+        return res.send({acknowledged: false, message: " You already completed"})
+    }
+    const options = { upsert: true };
+    const updatedDoc = {
+        $set: {
+            isCompleted: true
+        }
+    }
+    const result = await tasksCollection.updateOne(filter, updatedDoc, options);
+    res.send(result);
+});
     // delete
     app.delete('/tasks/:id', async (req, res) => {
         const id = req.params.id;
